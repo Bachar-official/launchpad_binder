@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/app/routing.dart';
 
 class App extends StatelessWidget {
@@ -6,5 +7,5 @@ class App extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) =>
-      MaterialApp(onGenerateRoute: AppRouter.onGenerateRoute);
+      MaterialApp(onGenerateRoute: AppRouter.onGenerateRoute, scaffoldMessengerKey: di.deps.scaffoldKey, navigatorKey: di.deps.navKey,);
 }

@@ -12,14 +12,22 @@ class SelectDeviceStep extends StatelessWidget {
 
     return StateBuilder<WizardState>(
       stateReadable: manager,
-      builder: (context, state, _) => DropdownButtonFormField(
-        decoration: InputDecoration(
-          helperText: 'Controller',
-        ),
-        items: manager.devices
-            .map((el) => DropdownMenuItem(value: el, child: Text(el.name)))
-            .toList(),
-        onChanged: manager.selectDevice,
+      builder: (context, state, _) => Row(
+        children: [
+          Expanded(
+            child: DropdownButtonFormField(
+              decoration: InputDecoration(helperText: 'Controller', hintText: 'Select controller'),
+              items: state.devices
+                  .map((el) => DropdownMenuItem(value: el, child: Text(el.name)))
+                  .toList(),
+              onChanged: manager.selectDevice,
+            ),
+          ),
+          IconButton(
+            onPressed: manager.updateDevices,
+            icon: const Icon(Icons.refresh),
+          ),
+        ],
       ),
     );
   }

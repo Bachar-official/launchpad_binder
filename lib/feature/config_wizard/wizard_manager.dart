@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/enum/palette.dart';
 import 'package:launchpad_binder/entity/enum/profile_pad.dart';
+import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/entity/interface/manager_base.dart';
 import 'package:launchpad_binder/entity/mixin/condition_exception_handler.dart';
 import 'package:launchpad_binder/entity/mixin/logger_mixin.dart';
@@ -12,32 +13,24 @@ import 'package:launchpad_binder/service/midi_service.dart';
 
 class WizardManager extends ManagerBase<WizardState>
     with CEHandler, SnackbarMixin, LoggerMixin {
-  WizardManager(super.state, {required super.deps, required this.midiService}){
+  WizardManager(super.state, {required super.deps, required this.midiService}) {
     updateDevices();
   }
+
   final MidiService midiService;
-  List<MidiDevice> devices = [];
   StreamSubscription<MidiPacket>? _singlePressSubscription;
 
-  void setStep(int step) => handle((emit) async {
-    emit(state.copyWith(step: step));
-  });
+  void setStep(int step) => handle((emit) async => emit(state.copyWith(step: step)));
 
-  void setPalette(Palette? palette) => handle((emit) async {
-    emit(state.copyWith(palette: palette));
-  });
+  void setPalette(Palette? palette) => handle((emit) async => emit(state.copyWith(palette: palette, step: 2)));
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
-    selectDevice(null);
     try {
-      final response = await midiService.devices;
-      checkCondition(
-        response == null || response.isEmpty,
-        'MIDI devices not found',
-      );
-      devices = response!;
-      success('Got ${devices.length} devices!');
+      final devices = await midiService.devices;
+      checkCondition(devices == null || devices.isEmpty, 'MIDI devices not found');
+      emit(state.copyWith(devices: devices));
+      success('Got ${devices?.length} devices!');
     } catch (e, s) {
       catchException(
         deps: deps,
@@ -51,36 +44,54 @@ class WizardManager extends ManagerBase<WizardState>
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
     await midiService.connectToDevice(device);
-    if (device != null) {
-      var currentStep = state.step;
-      setStep(currentStep++);
-    }
+    if (device != null) setStep(1);
   });
 
-  void cancelCurrentMapping() async {
-    await _singlePressSubscription?.cancel();
-    _singlePressSubscription = null;
-    handle((emit) async => emit(state.copyWith(currentMappingPad: null)));
+  // === КАЛИБРОВКА ===
+
+  void startFullMapping() => handle((emit) async {
+    // Начинаем с первой кнопки
+    emit(state.copyWith(currentMappingPad: ProfilePad.values[0]));
+    _listenForNextPad();
+  });
+
+  void _listenForNextPad() {
+    _singlePressSubscription?.cancel();
+    _singlePressSubscription = midiService.onMidiData?.listen((packet) {
+      if (_isNoteOn(packet)) {
+        _onPadPressed(packet.data[1]);
+      }
+    });
   }
 
-  void _handleSinglePadPress(ProfilePad pad, int midiNote) async {
-    // Отменяем подписку сразу после первого нажатия
-    await _singlePressSubscription?.cancel();
-    _singlePressSubscription = null;
+  void _onPadPressed(int midiNote) {
+    final currentPad = state.currentMappingPad;
+    if (currentPad == null) return;
 
     // Сохраняем
-    handle((emit) async {
-      final newMap = Map<ProfilePad, int>.from(state.profileMap);
-      newMap[pad] = midiNote;
-      emit(
-        state.copyWith(
-          profileMap: newMap,
-          currentMappingPad: null, // снимаем подсветку
-        ),
-      );
-    });
+    final newMap = Map<ProfilePad, int>.from(state.profileMap);
+    newMap[currentPad] = midiNote;
 
-    success('Кнопка "${pad.name}" сопоставлена с MIDI note $midiNote');
+    // Определяем следующую кнопку
+    final currentIndex = ProfilePad.values.indexOf(currentPad);
+    final isLast = currentIndex == ProfilePad.values.length - 1;
+    final nextPad = isLast ? null : ProfilePad.values[currentIndex + 1];
+
+    handle((emit) async {
+      if (nextPad != null) {
+        // Продолжаем
+        emit(state.copyWith(profileMap: newMap, currentMappingPad: nextPad));
+        success('Button "${currentPad.name}" → $midiNote');
+      } else {
+        // Завершаем
+        _singlePressSubscription?.cancel();
+        _singlePressSubscription = null;
+        emit(state.copyWith(profileMap: newMap, currentMappingPad: null));
+        success('Calibration completed!');
+        showSnackbar(deps: deps, reason: SnackbarReason.success, message: 'Calibration completed!');
+        deps.navKey.currentState!.pop();
+      }
+    });
   }
 
   bool _isNoteOn(MidiPacket packet) {
@@ -90,18 +101,9 @@ class WizardManager extends ManagerBase<WizardState>
     return (status & 0xF0) == 0x90 && velocity > 0;
   }
 
-  void startMappingFor(ProfilePad pad) => handle((emit) async {
-    // Подсвечиваем кнопку в UI
-    emit(state.copyWith(currentMappingPad: pad));
-
-    // Отменяем предыдущую подписку (на всякий случай)
-    await _singlePressSubscription?.cancel();
-
-    // Подписываемся на одно нажатие
-    _singlePressSubscription = midiService.onMidiData?.listen((packet) {
-      if (_isNoteOn(packet)) {
-        _handleSinglePadPress(pad, packet.data[1]);
-      }
-    });
-  });
+  void cancelMapping() {
+    _singlePressSubscription?.cancel();
+    _singlePressSubscription = null;
+    handle((emit) async => emit(state.copyWith(currentMappingPad: null)));
+  }
 }

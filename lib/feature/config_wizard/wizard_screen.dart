@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/feature/config_wizard/steps/select_device.dart';
+import 'package:launchpad_binder/feature/config_wizard/steps/select_palette.dart';
+import 'package:launchpad_binder/feature/config_wizard/steps/select_profile_buttons.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:yx_state_flutter/yx_state_flutter.dart';
 
@@ -24,12 +26,12 @@ class WizardScreen extends StatelessWidget {
             ),
             Step(
               title: const Text('Choose palette'),
-              content: const Placeholder(),
-              isActive: state.step == 1,
+              content: SelectPaletteStep(),
+              isActive: manager.midiService.activeDevice != null,
             ),
             Step(
               title: const Text('Let\'s bind profile buttons'),
-              content: const Placeholder(),
+              content: SelectProfileButtonsStep(),
               isActive: state.step == 2,
             ),
         ]),

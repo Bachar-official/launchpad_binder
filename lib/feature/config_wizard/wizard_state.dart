@@ -1,3 +1,4 @@
+import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/enum/palette.dart';
 import 'package:launchpad_binder/entity/enum/profile_pad.dart';
 
@@ -6,12 +7,14 @@ class WizardState {
   final Palette? palette;
   final Map<ProfilePad, int> profileMap;
   final ProfilePad? currentMappingPad;
+  final List<MidiDevice> devices;
 
   const WizardState({
     required this.step,
     required this.palette,
     required this.profileMap,
-    this.currentMappingPad,
+    required this.currentMappingPad,
+    required this.devices,
   });
 
   factory WizardState.initial() => WizardState(
@@ -19,6 +22,7 @@ class WizardState {
         palette: null,
         profileMap: {},
         currentMappingPad: null,
+        devices: [],
       );
 
   WizardState copyWith({
@@ -27,10 +31,12 @@ class WizardState {
     Map<ProfilePad, int>? profileMap,
     ProfilePad? currentMappingPad,
     bool nullableMappingPad = false,
+    List<MidiDevice>? devices,
   }) => WizardState(
         step: step ?? this.step,
         palette: palette ?? this.palette,
         profileMap: profileMap ?? this.profileMap,
         currentMappingPad: nullableMappingPad ? null : currentMappingPad ?? this.currentMappingPad,
+        devices: devices ?? this.devices,
       );
 }

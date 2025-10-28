@@ -13,6 +13,7 @@ class MidiService {
   StreamSubscription<MidiPacket>? _subscription;
 
   MidiDevice? _activeDevice;
+  MidiDevice? get activeDevice => _activeDevice;
 
   Stream<MidiPacket>? get onMidiData => _midiStream;
 
