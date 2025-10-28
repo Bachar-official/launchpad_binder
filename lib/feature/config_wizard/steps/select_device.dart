@@ -15,7 +15,6 @@ class SelectDeviceStep extends StatelessWidget {
       builder: (context, state, _) => DropdownButtonFormField(
         decoration: InputDecoration(
           helperText: 'Controller',
-          prefix: IconButton(onPressed: manager.updateDevices, icon: const Icon(Icons.refresh)),
         ),
         items: manager.devices
             .map((el) => DropdownMenuItem(value: el, child: Text(el.name)))
