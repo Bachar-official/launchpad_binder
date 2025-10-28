@@ -4,10 +4,19 @@ import 'package:launchpad_binder/entity/mixin/logger_mixin.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
 import 'package:launchpad_binder/entity/mixin/condition_exception_handler.dart';
 import 'package:launchpad_binder/entity/mixin/snackbar_mixin.dart';
+import 'package:launchpad_binder/service/midi_service.dart';
 
 class SettingsManager extends ManagerBase<SettingsState>
     with CEHandler, SnackbarMixin, LoggerMixin {
-  SettingsManager(super.state, {required super.deps});
+  final MidiService midiService;
+
+  SettingsManager(
+    super.state, {
+    required super.deps,
+    required this.midiService,
+  });
+
+  List<MidiDevice> midiDevices = [];
 
   void setIsLoading(bool isLoading) => handle((emit) async {
     emit(state.copyWith(isLoading: isLoading));
@@ -18,13 +27,13 @@ class SettingsManager extends ManagerBase<SettingsState>
     selectDevice(null);
     setIsLoading(true);
     try {
-      final devices = await deps.midi.devices;
+      final devices = await midiService.devices;
       checkCondition(
         devices == null || devices.isEmpty,
         'MIDI devices not found',
       );
-      emit(state.copyWith(devices: devices));
-      success('Got ${devices?.length} devices!');
+      midiDevices = devices!;
+      success('Got ${devices.length} devices!');
     } catch (e, s) {
       catchException(
         deps: deps,
@@ -39,16 +48,11 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
-    emit(state.copyWith(activeDevice: device, nullableDevice: device == null));
-    if (state.activeDevice != null) {
-      deps.midi.connectToDevice(state.activeDevice!);
-      final stream = deps.midi.onMidiDataReceived;
-
-      if (stream != null) {
-        await for (MidiPacket event in stream) {
-          debug(event.data.toString());
-        }
-      }
-    }
+    await midiService.connectToDevice(device);
+    // if (midiService.onMidiData != null) {
+    //   await for (var packet in midiService.onMidiData!) {
+    //     debug(packet.data.toString());
+    //   }
+    // }
   });
 }

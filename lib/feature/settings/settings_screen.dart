@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/app/di.dart';
+import 'package:launchpad_binder/components/launchpad_visualizer.dart';
+import 'package:launchpad_binder/entity/enum/profile_pad.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
 import 'package:yx_state_flutter/yx_state_flutter.dart';
 
@@ -34,7 +36,7 @@ class SettingsScreen extends StatelessWidget {
                         decoration: const InputDecoration(
                           helperText: 'Select MIDI device',
                         ),
-                        items: state.devices
+                        items: manager.midiDevices
                             .map(
                               (el) => DropdownMenuItem<MidiDevice>(
                                 value: el,
@@ -44,6 +46,7 @@ class SettingsScreen extends StatelessWidget {
                             .toList(),
                         onChanged: manager.selectDevice,
                       ),
+                      LaunchpadVisualizer(highlightedPad: ProfilePad.b),
                     ],
                   ),
           ),
