@@ -12,7 +12,9 @@ import 'package:launchpad_binder/service/midi_service.dart';
 
 class WizardManager extends ManagerBase<WizardState>
     with CEHandler, SnackbarMixin, LoggerMixin {
-  WizardManager(super.state, {required super.deps, required this.midiService});
+  WizardManager(super.state, {required super.deps, required this.midiService}){
+    updateDevices();
+  }
   final MidiService midiService;
   List<MidiDevice> devices = [];
   StreamSubscription<MidiPacket>? _singlePressSubscription;
@@ -49,10 +51,9 @@ class WizardManager extends ManagerBase<WizardState>
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
     await midiService.connectToDevice(device);
-    if (midiService.onMidiData != null) {
-      await for (var packet in midiService.onMidiData!) {
-        debug(packet.data.toString());
-      }
+    if (device != null) {
+      var currentStep = state.step;
+      setStep(currentStep++);
     }
   });
 
