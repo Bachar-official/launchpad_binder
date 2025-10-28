@@ -1,6 +1,6 @@
 import 'package:launchpad_binder/entity/interface/has_deps.dart';
 import 'package:launchpad_binder/entity/manager_deps.dart';
-import 'package:launchpad_binder/entity/snackbar_reason.dart';
+import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/exception/condition_exception.dart';
 
 mixin SnackbarMixin on HasDeps {

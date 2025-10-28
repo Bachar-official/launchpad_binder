@@ -18,8 +18,11 @@ class SettingsManager extends ManagerBase<SettingsState>
     selectDevice(null);
     setIsLoading(true);
     try {
-      final devices = await MidiCommand().devices;
-      checkCondition(devices == null || devices.isEmpty, 'MIDI devices not found');
+      final devices = await deps.midi.devices;
+      checkCondition(
+        devices == null || devices.isEmpty,
+        'MIDI devices not found',
+      );
       emit(state.copyWith(devices: devices));
       success('Got ${devices?.length} devices!');
     } catch (e, s) {
@@ -37,5 +40,15 @@ class SettingsManager extends ManagerBase<SettingsState>
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
     emit(state.copyWith(activeDevice: device, nullableDevice: device == null));
+    if (state.activeDevice != null) {
+      deps.midi.connectToDevice(state.activeDevice!);
+      final stream = deps.midi.onMidiDataReceived;
+
+      if (stream != null) {
+        await for (MidiPacket event in stream) {
+          debug(event.data.toString());
+        }
+      }
+    }
   });
 }
