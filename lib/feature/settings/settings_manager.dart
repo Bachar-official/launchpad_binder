@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/entity/interface/manager_base.dart';
 import 'package:launchpad_binder/entity/mixin/logger_mixin.dart';
+import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
 import 'package:launchpad_binder/entity/mixin/condition_exception_handler.dart';
 import 'package:launchpad_binder/entity/mixin/snackbar_mixin.dart';
@@ -41,7 +43,13 @@ class SettingsManager extends ManagerBase<SettingsState>
 
       final config = await di.configService.getConfig();
       if (config == null) {
-        await deps.navKey.currentState!.pushNamed(AppRouter.wizard);
+        final result = await showDialog<bool>(
+          context: deps.navKey.currentState!.overlay!.context,
+          builder: (context) => CalibrationDialog(),
+        );
+        if (result != null && result) {
+          await deps.navKey.currentState!.pushNamed(AppRouter.wizard);
+        }
       } else {
         emit(state.copyWith(config: config));
         showSnackbar(
