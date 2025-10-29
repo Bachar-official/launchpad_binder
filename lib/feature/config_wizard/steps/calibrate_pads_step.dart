@@ -4,8 +4,8 @@ import 'package:launchpad_binder/components/launchpad_visualizer.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:yx_state_flutter/yx_state_flutter.dart';
 
-class SelectProfileButtonsStep extends StatelessWidget {
-  const SelectProfileButtonsStep({super.key});
+class CalibratePadsStep extends StatelessWidget {
+  const CalibratePadsStep({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -16,10 +16,15 @@ class SelectProfileButtonsStep extends StatelessWidget {
         if (state.step == 2 && state.currentMappingPad == null) {
           manager.startFullMapping();
         }
-        
-        return LaunchpadVisualizer(
-        highlightedPad: state.currentMappingPad,
-      );
+
+        return SizedBox(
+          height: 300,
+          child: LaunchpadVisualizer(
+            highlightedPads: state.currentMappingPad == null
+                ? {}
+                : {state.currentMappingPad!},
+          ),
+        );
       },
     );
   }

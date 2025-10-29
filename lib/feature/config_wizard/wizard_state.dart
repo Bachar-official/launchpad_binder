@@ -1,12 +1,12 @@
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/enum/palette.dart';
-import 'package:launchpad_binder/entity/enum/profile_pad.dart';
+import 'package:launchpad_binder/entity/enum/pad.dart';
 
 class WizardState {
   final int step;
   final Palette? palette;
-  final Map<ProfilePad, int> profileMap;
-  final ProfilePad? currentMappingPad;
+  final Map<Pad, int> profileMap;
+  final Pad? currentMappingPad;
   final List<MidiDevice> devices;
 
   const WizardState({
@@ -28,8 +28,8 @@ class WizardState {
   WizardState copyWith({
     int? step,
     Palette? palette,
-    Map<ProfilePad, int>? profileMap,
-    ProfilePad? currentMappingPad,
+    Map<Pad, int>? profileMap,
+    Pad? currentMappingPad,
     bool nullableMappingPad = false,
     List<MidiDevice>? devices,
   }) => WizardState(

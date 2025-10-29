@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/enum/palette.dart';
-import 'package:launchpad_binder/entity/enum/profile_pad.dart';
+import 'package:launchpad_binder/entity/enum/pad.dart';
 import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/entity/interface/manager_base.dart';
 import 'package:launchpad_binder/entity/mixin/condition_exception_handler.dart';
@@ -51,7 +51,7 @@ class WizardManager extends ManagerBase<WizardState>
 
   void startFullMapping() => handle((emit) async {
     // Начинаем с первой кнопки
-    emit(state.copyWith(currentMappingPad: ProfilePad.values[0]));
+    emit(state.copyWith(currentMappingPad: Pad.values[0]));
     _listenForNextPad();
   });
 
@@ -69,13 +69,13 @@ class WizardManager extends ManagerBase<WizardState>
     if (currentPad == null) return;
 
     // Сохраняем
-    final newMap = Map<ProfilePad, int>.from(state.profileMap);
+    final newMap = Map<Pad, int>.from(state.profileMap);
     newMap[currentPad] = midiNote;
 
     // Определяем следующую кнопку
-    final currentIndex = ProfilePad.values.indexOf(currentPad);
-    final isLast = currentIndex == ProfilePad.values.length - 1;
-    final nextPad = isLast ? null : ProfilePad.values[currentIndex + 1];
+    final currentIndex = Pad.values.indexOf(currentPad);
+    final isLast = currentIndex == Pad.values.length - 1;
+    final nextPad = isLast ? null : Pad.values[currentIndex + 1];
 
     handle((emit) async {
       if (nextPad != null) {
@@ -98,7 +98,7 @@ class WizardManager extends ManagerBase<WizardState>
     if (packet.data.length < 3) return false;
     final status = packet.data[0];
     final velocity = packet.data[2];
-    return (status & 0xF0) == 0x90 && velocity > 0;
+    return (status & 0xF0) > 0x0 && velocity > 0;
   }
 
   void cancelMapping() {

@@ -49,10 +49,10 @@ class SettingsManager extends ManagerBase<SettingsState>
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
     await midiService.connectToDevice(device);
-    // if (midiService.onMidiData != null) {
-    //   await for (var packet in midiService.onMidiData!) {
-    //     debug(packet.data.toString());
-    //   }
-    // }
+    if (midiService.onMidiData != null) {
+      await for (var packet in midiService.onMidiData!) {
+        debug(packet.data.toString());
+      }
+    }
   });
 }
