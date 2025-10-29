@@ -14,7 +14,7 @@ class NewColorDialog extends StatefulWidget {
 class _NewColorDialogState extends State<NewColorDialog> {
   final manager = di.colorManager;
   int currentVelocity = 0;
-  Color chosenColor = Color(0x00000000);
+  Color chosenColor = Color(0xFF000000);
 
   @override
   void initState() {
