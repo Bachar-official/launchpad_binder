@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/services.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:logger/logger.dart';
 
@@ -18,6 +19,16 @@ class MidiService {
   Stream<MidiPacket>? get onMidiData => _midiStream;
 
   Future<List<MidiDevice>?> get devices async => await _midi.devices;
+
+  void sendMidi(int address, int velocity) {
+    _midi.sendData(Uint8List.fromList([144, address, velocity]), deviceId: _activeDevice?.id);
+  }
+
+  void clearMidi() {
+    for (int i = 0; i < 200; i++) {
+      sendMidi(i, 0);
+    }
+  }
 
   Future<void> connectToDevice(MidiDevice? device) async {
     if (_activeDevice?.id == device?.id) return;

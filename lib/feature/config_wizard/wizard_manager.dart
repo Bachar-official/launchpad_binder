@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:launchpad_binder/entity/enum/palette.dart';
+import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/entity/enum/pad.dart';
 import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/entity/interface/manager_base.dart';
@@ -20,9 +20,9 @@ class WizardManager extends ManagerBase<WizardState>
   final MidiService midiService;
   StreamSubscription<MidiPacket>? _singlePressSubscription;
 
-  void setStep(int step) => handle((emit) async => emit(state.copyWith(step: step)));
+  void setDeviceId(String? deviceId) => handle((emit) async => emit(state.copyWith(deviceId: deviceId, nullableDeviceId: deviceId == null)));
 
-  void setPalette(Palette? palette) => handle((emit) async => emit(state.copyWith(palette: palette, step: 2)));
+  void setStep(int step) => handle((emit) async => emit(state.copyWith(step: step)));
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
@@ -43,6 +43,7 @@ class WizardManager extends ManagerBase<WizardState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
+    setDeviceId(device?.id);
     await midiService.connectToDevice(device);
     if (device != null) setStep(1);
   });
@@ -51,7 +52,7 @@ class WizardManager extends ManagerBase<WizardState>
 
   void startFullMapping() => handle((emit) async {
     // Начинаем с первой кнопки
-    emit(state.copyWith(currentMappingPad: Pad.values[0]));
+    emit(state.copyWith(currentMappingPad: Pad.calibratingPads()[0]));
     _listenForNextPad();
   });
 
@@ -69,27 +70,35 @@ class WizardManager extends ManagerBase<WizardState>
     if (currentPad == null) return;
 
     // Сохраняем
-    final newMap = Map<Pad, int>.from(state.profileMap);
+    final newMap = Map<Pad, int>.from(state.mapping);
     newMap[currentPad] = midiNote;
 
     // Определяем следующую кнопку
-    final currentIndex = Pad.values.indexOf(currentPad);
-    final isLast = currentIndex == Pad.values.length - 1;
-    final nextPad = isLast ? null : Pad.values[currentIndex + 1];
+    final currentIndex = Pad.calibratingPads().indexOf(currentPad);
+    final isLast = currentIndex == Pad.calibratingPads().length - 1;
+    final nextPad = isLast ? null : Pad.calibratingPads()[currentIndex + 1];
 
     handle((emit) async {
       if (nextPad != null) {
+        midiService.sendMidi(midiNote, 127);
         // Продолжаем
         emit(state.copyWith(profileMap: newMap, currentMappingPad: nextPad));
         success('Button "${currentPad.name}" → $midiNote');
       } else {
         // Завершаем
+        midiService.clearMidi();
         _singlePressSubscription?.cancel();
         _singlePressSubscription = null;
         emit(state.copyWith(profileMap: newMap, currentMappingPad: null));
         success('Calibration completed!');
+        try {
+          await di.configService.saveConfig(state.toConfig());
         showSnackbar(deps: deps, reason: SnackbarReason.success, message: 'Calibration completed!');
+        di.settingsManager.updateDevices();
         deps.navKey.currentState!.pop();
+        } catch(e, s) {
+          catchException(deps: deps, exception: e, stacktrace: s, message: 'Error while saving config');
+        }        
       }
     });
   }

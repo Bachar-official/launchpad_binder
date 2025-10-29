@@ -14,6 +14,13 @@ class SettingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final manager = di.settingsManager;
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!manager.isInitializedWidget) {
+        manager.updateDevices();
+        manager.isInitializedWidget = true;
+      }
+    });
+
     return StateBuilder<SettingsState>(
       stateReadable: manager,
       builder: (context, state, _) => Scaffold(

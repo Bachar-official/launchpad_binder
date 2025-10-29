@@ -13,7 +13,7 @@ class CalibratePadsStep extends StatelessWidget {
     return StateBuilder<WizardState>(
       stateReadable: manager,
       builder: (ctx, state, _) {
-        if (state.step == 2 && state.currentMappingPad == null) {
+        if (state.step == 1 && state.currentMappingPad == null) {
           manager.startFullMapping();
         }
 

@@ -4,17 +4,20 @@ import 'package:launchpad_binder/feature/config_wizard/wizard_manager.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:launchpad_binder/feature/settings/settings_manager.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
+import 'package:launchpad_binder/service/config_service.dart';
 import 'package:launchpad_binder/service/midi_service.dart';
 import 'package:logger/logger.dart';
 
 class DI {
   final ManagerDeps deps = (logger: Logger(), scaffoldKey: GlobalKey<ScaffoldMessengerState>(), navKey: GlobalKey<NavigatorState>());
+  
   late final MidiService midiService = MidiService(logger: deps.logger);
+  late final ConfigService configService = ConfigService(logger: deps.logger);
+
   late final settingsManager = SettingsManager(SettingsState.initial(), deps: deps, midiService: midiService);
   late final wizardManager = WizardManager(WizardState.initial(), deps: deps, midiService: midiService);
 
   void init() {
-    settingsManager.updateDevices();
   }
 }
 

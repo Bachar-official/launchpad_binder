@@ -1,4 +1,7 @@
 import 'package:flutter_midi_command/flutter_midi_command.dart';
+import 'package:launchpad_binder/app/di.dart';
+import 'package:launchpad_binder/app/routing.dart';
+import 'package:launchpad_binder/entity/enum/snackbar_reason.dart';
 import 'package:launchpad_binder/entity/interface/manager_base.dart';
 import 'package:launchpad_binder/entity/mixin/logger_mixin.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
@@ -17,6 +20,7 @@ class SettingsManager extends ManagerBase<SettingsState>
   });
 
   List<MidiDevice> midiDevices = [];
+  bool isInitializedWidget = false;
 
   void setIsLoading(bool isLoading) => handle((emit) async {
     emit(state.copyWith(isLoading: isLoading));
@@ -34,6 +38,18 @@ class SettingsManager extends ManagerBase<SettingsState>
       );
       midiDevices = devices!;
       success('Got ${devices.length} devices!');
+
+      final config = await di.configService.getConfig();
+      if (config == null) {
+        await deps.navKey.currentState!.pushNamed(AppRouter.wizard);
+      } else {
+        emit(state.copyWith(config: config));
+        showSnackbar(
+          deps: deps,
+          reason: SnackbarReason.success,
+          message: 'Device configuration loaded!',
+        );
+      }
     } catch (e, s) {
       catchException(
         deps: deps,
