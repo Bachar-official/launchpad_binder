@@ -16,7 +16,7 @@ class ColorCard extends StatelessWidget {
     return Chip(
       avatar: Container(color: Color(hexColor)),
       label: Text(velocity.toString()),
-      deleteIcon: const Icon(Icons.remove),
+      deleteIcon: const Icon(Icons.clear),
       onDeleted: () => onRemove(velocity),
     );
   }

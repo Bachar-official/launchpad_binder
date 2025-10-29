@@ -31,7 +31,6 @@ class ColorDictionaryManager extends ManagerBase<ColorDictionaryState>
 
   Future<void> onAddPair() async {
     final newPair = await showDialog<(int, int)>(context: deps.navKey.currentState!.overlay!.context, builder: (ctx) => NewColorDialog());
-    print(newPair);
     if (newPair != null) {
       addPair(newPair.$1, newPair.$2);
     }
