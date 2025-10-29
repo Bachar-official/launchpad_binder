@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:launchpad_binder/entity/manager_deps.dart';
+import 'package:launchpad_binder/feature/color_dictionary/color_dictionary_manager.dart';
+import 'package:launchpad_binder/feature/color_dictionary/color_dictionary_state.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_manager.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:launchpad_binder/feature/settings/settings_manager.dart';
@@ -16,6 +18,7 @@ class DI {
 
   late final settingsManager = SettingsManager(SettingsState.initial(), deps: deps, midiService: midiService);
   late final wizardManager = WizardManager(WizardState.initial(), deps: deps, midiService: midiService);
+  late final ColorDictionaryManager colorManager = ColorDictionaryManager(ColorDictionaryState.initial(), deps: deps, midiService: midiService);
 
   void init() {
   }

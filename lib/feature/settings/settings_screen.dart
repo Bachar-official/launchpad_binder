@@ -35,6 +35,11 @@ class SettingsScreen extends StatelessWidget {
               onPressed: () => Navigator.pushNamed(context, AppRouter.wizard),
               icon: const Icon(Icons.settings),
             ),
+            IconButton(
+              onPressed: () => Navigator.pushNamed(context, AppRouter.colors),
+              icon: const Icon(Icons.colorize),
+              tooltip: 'Open color dictionary',
+            ),
           ],
         ),
         body: Padding(
