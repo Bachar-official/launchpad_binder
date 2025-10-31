@@ -33,7 +33,7 @@ class MidiService {
   Future<void> connectToDevice(MidiDevice? device) async {
     if (_activeDevice?.id == device?.id) return;
 
-    await _disconnect();
+    await disconnect();
 
     if (device == null) {
       _activeDevice = null;
@@ -46,7 +46,7 @@ class MidiService {
     _midiStream = _midi.onMidiDataReceived;
   }
 
-  Future<void> _disconnect() async {
+  Future<void> disconnect() async {
     _subscription?.cancel();
     _subscription = null;
     if (_activeDevice != null) {
@@ -57,7 +57,7 @@ class MidiService {
   }
 
   Future<void> dispose() async {
-    await _disconnect();
+    await disconnect();
     await _midi.dispose();
   }
 }

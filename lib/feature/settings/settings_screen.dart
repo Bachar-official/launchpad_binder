@@ -50,8 +50,12 @@ class SettingsScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     DropdownButtonFormField<MidiDevice>(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         helperText: 'Select MIDI device',
+                        suffix: IconButton(
+                          icon: Icon(Icons.clear),
+                          onPressed: manager.disconnectDevice,
+                        ),
                       ),
                       items: manager.midiDevices
                           .map(

@@ -91,6 +91,7 @@ class WizardManager extends ManagerBase<WizardState>
         _singlePressSubscription = null;
         emit(state.copyWith(profileMap: newMap, currentMappingPad: null));
         success('Calibration completed!');
+        midiService.disconnect();
         try {
           await di.configService.saveConfig(state.toConfig());
         showSnackbar(deps: deps, reason: SnackbarReason.success, message: 'Calibration completed!');

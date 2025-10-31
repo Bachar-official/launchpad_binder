@@ -23,6 +23,7 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   List<MidiDevice> midiDevices = [];
   bool isInitializedWidget = false;
+  MidiDevice? get active => midiService.activeDevice;
 
   void setIsLoading(bool isLoading) => handle((emit) async {
     emit(state.copyWith(isLoading: isLoading));
@@ -79,4 +80,13 @@ class SettingsManager extends ManagerBase<SettingsState>
       }
     }
   });
+
+  void disconnectDevice() async {
+    debug('Disconnecting device ${active?.name}...');
+    try {
+      await midiService.disconnect();
+    } catch(e, s) {
+      catchException(deps: deps, exception: e, stacktrace: s, message: 'Error while disconnecting');
+    }
+  }
 }
