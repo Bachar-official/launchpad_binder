@@ -31,7 +31,7 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
-    selectDevice(null);
+    disconnectDevice();
     setIsLoading(true);
     try {
       final devices = await midiService.devices;
@@ -73,20 +73,42 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
-    await midiService.connectToDevice(device);
-    if (midiService.onMidiData != null) {
-      await for (var packet in midiService.onMidiData!) {
-        debug(packet.data.toString());
-      }
+    setIsLoading(true);
+    try {
+      await midiService.connectToDevice(device);
+      emit(state.copyWith(connectedDevice: device));
+    } catch (e, s) {
+      catchException(
+        deps: deps,
+        exception: e,
+        stacktrace: s,
+        message: 'Error while connecting to device',
+      );
+    } finally {
+      setIsLoading(false);
     }
+    // if (midiService.onMidiData != null) {
+    //   await for (var packet in midiService.onMidiData!) {
+    //     debug(packet.data.toString());
+    //   }
+    // }
   });
 
-  void disconnectDevice() async {
-    debug('Disconnecting device ${active?.name}...');
+  void disconnectDevice() => handle((emit) async {
+    debug('Disconnecting...');
+    setIsLoading(true);
     try {
-      await midiService.disconnect();
-    } catch(e, s) {
-      catchException(deps: deps, exception: e, stacktrace: s, message: 'Error while disconnecting');
+      midiService.disconnect();
+      emit(state.copyWith(connectedDevice: null, nullableDevice: true));
+    } catch (e, s) {
+      catchException(
+        deps: deps,
+        exception: e,
+        stacktrace: s,
+        message: 'Error while disconnecting',
+      );
+    } finally {
+      setIsLoading(false);
     }
-  }
+  });
 }

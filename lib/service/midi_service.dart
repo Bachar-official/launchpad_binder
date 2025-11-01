@@ -2,13 +2,9 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:logger/logger.dart';
 
 class MidiService {
-  final Logger logger;
   final MidiCommand _midi = MidiCommand();
-
-  MidiService({required this.logger});
 
   Stream<MidiPacket>? _midiStream;
   StreamSubscription<MidiPacket>? _subscription;
