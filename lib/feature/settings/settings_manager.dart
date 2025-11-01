@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
-import 'package:launchpad_binder/service/midi_service.dart';
+import 'package:launchpad_binder/service/service.dart';
 
 class SettingsManager extends ManagerBase<SettingsState>
     with CEHandler, SnackbarMixin, LoggerMixin {
   final MidiService midiService;
+  final ConfigService configService;
 
   SettingsManager(
     super.state, {
     required super.deps,
     required this.midiService,
+    required this.configService,
   });
 
   List<MidiDevice> midiDevices = [];
@@ -38,7 +39,7 @@ class SettingsManager extends ManagerBase<SettingsState>
       midiDevices = devices!;
       success('Got ${devices.length} devices!');
 
-      final config = await di.configService.getConfig();
+      final config = await configService.getConfig();
       if (config == null) {
         final result = await showDialog<bool>(
           context: deps.navKey.currentState!.overlay!.context,

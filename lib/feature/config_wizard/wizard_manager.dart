@@ -1,29 +1,45 @@
 import 'dart:async';
 
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:launchpad_binder/service/midi_service.dart';
+import 'package:launchpad_binder/service/service.dart';
 
 class WizardManager extends ManagerBase<WizardState>
     with CEHandler, SnackbarMixin, LoggerMixin {
-  WizardManager(super.state, {required super.deps, required this.midiService}) {
+
+  final ConfigService configService;
+  final MidiService midiService;
+
+  WizardManager(
+    super.state, {
+    required super.deps,
+    required this.midiService,
+    required this.configService,
+  }) {
     updateDevices();
   }
 
-  final MidiService midiService;
   StreamSubscription<MidiPacket>? _singlePressSubscription;
 
-  void setDeviceId(String? deviceId) => handle((emit) async => emit(state.copyWith(deviceId: deviceId, nullableDeviceId: deviceId == null)));
+  void setDeviceId(String? deviceId) => handle(
+    (emit) async => emit(
+      state.copyWith(deviceId: deviceId, nullableDeviceId: deviceId == null),
+    ),
+  );
 
-  void setStep(int step) => handle((emit) async => emit(state.copyWith(step: step)));
+  void setStep(int step) =>
+      handle((emit) async => emit(state.copyWith(step: step)));
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
     try {
       final devices = await midiService.devices;
-      checkCondition(devices == null || devices.isEmpty, 'MIDI devices not found');
+      checkCondition(
+        devices == null || devices.isEmpty,
+        'MIDI devices not found',
+      );
       emit(state.copyWith(devices: devices));
       success('Got ${devices?.length} devices!');
     } catch (e, s) {
@@ -88,22 +104,30 @@ class WizardManager extends ManagerBase<WizardState>
         success('Calibration completed!');
         midiService.disconnect();
         try {
-          await di.configService.saveConfig(state.toConfig());
-        showSnackbar(deps: deps, reason: SnackbarReason.success, message: 'Calibration completed!');
-        di.settingsManager.updateDevices();
-        deps.navKey.currentState!.pop();
-        } catch(e, s) {
-          catchException(deps: deps, exception: e, stacktrace: s, message: 'Error while saving config');
-        }        
+          await configService.saveConfig(state.toConfig());
+          showSnackbar(
+            deps: deps,
+            reason: SnackbarReason.success,
+            message: 'Calibration completed!',
+          );
+          // di.settingsManager.updateDevices();
+          deps.navKey.currentState!.pop();
+        } catch (e, s) {
+          catchException(
+            deps: deps,
+            exception: e,
+            stacktrace: s,
+            message: 'Error while saving config',
+          );
+        }
       }
     });
   }
 
   bool _isNoteOn(MidiPacket packet) {
     if (packet.data.length < 3) return false;
-    final status = packet.data[0];
     final velocity = packet.data[2];
-    return (status & 0xF0) > 0x0 && velocity > 0;
+    return velocity > 0;
   }
 
   void cancelMapping() {

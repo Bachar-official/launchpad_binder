@@ -37,6 +37,8 @@ dependencies:
   flutter_midi_command: ^0.5.3
   yx_state_flutter: ^1.0.0
   flutter_colorpicker: ^1.1.0
+  yx_scope_flutter: ^1.1.2
+  yx_scope: ^1.1.2
 
 dev_dependencies:
   flutter_test:

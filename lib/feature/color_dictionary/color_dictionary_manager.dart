@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:launchpad_binder/app/di.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/color_dictionary/color_dictionary_state.dart';
 import 'package:launchpad_binder/feature/color_dictionary/components/new_color_dialog.dart';
-import 'package:launchpad_binder/service/midi_service.dart';
+import 'package:launchpad_binder/service/service.dart';
 
 class ColorDictionaryManager extends ManagerBase<ColorDictionaryState>
     with CEHandler, SnackbarMixin, LoggerMixin {
   final MidiService midiService;
+  final ConfigService configService;
+
   ColorDictionaryManager(
     super.state, {
     required super.deps,
     required this.midiService,
+    required this.configService,
   });
 
   void setIsLoading(bool isLoading) =>
@@ -19,23 +21,37 @@ class ColorDictionaryManager extends ManagerBase<ColorDictionaryState>
 
   void addPair(int velocity, int color) => handle(
     (emit) async =>
-        emit(state.withNewColor(velocity: velocity, hexColor: color)),
+        emit(state.withNewColor(colorVelocity: velocity, hexColor: color)),
   );
 
   void removePair(int velocity) =>
       handle((emit) async => emit(state.withoutVelocity(velocity)));
 
+  void setVelocity(double velocity) => handle((emit) async {
+    sendVelocity(Pad.a1, velocity.toInt());
+    emit(state.copyWith(velocity: velocity.toInt()));
+  });
+
+  void setColor(Color color) => handle((emit) async => emit(state.copyWith(color: color)));
+
   Future<void> onAddPair() async {
-    final newPair = await showDialog<(int, int)>(context: deps.navKey.currentState!.overlay!.context, builder: (ctx) => NewColorDialog());
+    final newPair = await showDialog<(int, int)>(
+      context: deps.navKey.currentState!.overlay!.context,
+      builder: (ctx) => NewColorDialog(),
+    );
     if (newPair != null) {
       addPair(newPair.$1, newPair.$2);
+      setVelocity(0);
     }
   }
 
   Future<void> sendVelocity(Pad pad, int velocity) async {
     try {
-      checkCondition(di.settingsManager.state.config == null, 'Device config not found');
-      final address = di.settingsManager.state.config!.mapping[pad];
+      checkCondition(
+        configService.configNotifier.value == null,
+        'Device config not found',
+      );
+      final address = configService.configNotifier.value!.mapping[pad];
       midiService.sendMidi(address!, velocity);
     } catch (e, s) {
       catchException(
