@@ -7,6 +7,7 @@ import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
+import 'package:launchpad_binder/native/key_simulator.dart';
 import 'package:launchpad_binder/service/service.dart';
 import 'package:launchpad_binder/utils/midi_utils.dart';
 
@@ -92,9 +93,18 @@ class SettingsManager extends ManagerBase<SettingsState>
       setIsLoading(false);
     }
     if (midiService.onMidiData != null) {
+      final sim = KeySimulator.init();
       _pressSubscription = midiService.onMidiData?.listen((event) async {
-        final pad = MidiUtils.getPressedPad(event, configService.config?.mapping);
-        
+        final pad = MidiUtils.getPressedPad(
+          event,
+          configService.config?.mapping,
+        );
+        if (pad == Pad.a1) {
+          sim.simulateKeyCombo(['ctrl', 'alt', 't']);
+        }
+        if (pad == Pad.a2) {
+          sim.simulateKeyCombo(['alt', 'F4']);
+        }
       });
     }
   });
