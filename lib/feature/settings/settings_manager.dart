@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/app/routing.dart';
@@ -5,6 +8,7 @@ import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
 import 'package:launchpad_binder/service/service.dart';
+import 'package:launchpad_binder/utils/midi_utils.dart';
 
 class SettingsManager extends ManagerBase<SettingsState>
     with CEHandler, SnackbarMixin, LoggerMixin {
@@ -21,6 +25,7 @@ class SettingsManager extends ManagerBase<SettingsState>
   List<MidiDevice> midiDevices = [];
   bool isInitializedWidget = false;
   MidiDevice? get active => midiService.activeDevice;
+  StreamSubscription<MidiPacket>? _pressSubscription;
 
   void setIsLoading(bool isLoading) => handle((emit) async {
     emit(state.copyWith(isLoading: isLoading));
@@ -28,6 +33,8 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
+    _pressSubscription?.cancel();
+    _pressSubscription = null;
     disconnectDevice();
     setIsLoading(true);
     try {
@@ -84,17 +91,20 @@ class SettingsManager extends ManagerBase<SettingsState>
     } finally {
       setIsLoading(false);
     }
-    // if (midiService.onMidiData != null) {
-    //   await for (var packet in midiService.onMidiData!) {
-    //     debug(packet.data.toString());
-    //   }
-    // }
+    if (midiService.onMidiData != null) {
+      _pressSubscription = midiService.onMidiData?.listen((event) async {
+        final pad = MidiUtils.getPressedPad(event, configService.config?.mapping);
+        
+      });
+    }
   });
 
   void disconnectDevice() => handle((emit) async {
     debug('Disconnecting...');
     setIsLoading(true);
     try {
+      _pressSubscription?.cancel();
+      _pressSubscription = null;
       midiService.disconnect();
       emit(state.copyWith(connectedDevice: null, nullableDevice: true));
     } catch (e, s) {
