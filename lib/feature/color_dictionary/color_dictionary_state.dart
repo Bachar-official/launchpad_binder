@@ -34,6 +34,12 @@ class ColorDictionaryState {
     return copyWith(colorMap: newMap);
   }
 
+  ColorDictionaryState copyWithVelocity({required int velocity, required int hexColor}) {
+    final newColorMap = Map<int, int>.from(colorMap);
+    newColorMap[velocity] = hexColor;
+    return copyWith(colorMap: newColorMap);
+  }
+
   ColorDictionaryState copyWith({
     bool? isLoading,
     Map<int, int>? colorMap,

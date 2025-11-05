@@ -1,5 +1,8 @@
 import 'package:launchpad_binder/entity/entity.dart';
 
+const _mapping = 'mapping';
+const _deviceId = 'deviceId';
+
 class DeviceConfig {
   final String deviceId;
   final Map<Pad, MidiPad> mapping;
@@ -7,7 +10,7 @@ class DeviceConfig {
   const DeviceConfig({required this.deviceId, required this.mapping});
 
   factory DeviceConfig.fromMap(Map<String, dynamic> map) {
-    final Map<Pad, MidiPad> mapping = (map['mapping'] as Map<String, dynamic>)
+    final Map<Pad, MidiPad> mapping = (map[_mapping] as Map<String, dynamic>)
         .map(
           (k, v) => MapEntry(
             Pad.fromString(k),
@@ -15,11 +18,11 @@ class DeviceConfig {
           ),
         );
 
-    return DeviceConfig(deviceId: map['deviceId'], mapping: mapping);
+    return DeviceConfig(deviceId: map[_deviceId], mapping: mapping);
   }
 
   Map<String, dynamic> toMap() => {
-    'deviceId': deviceId,
-    'mapping': mapping.map((k, v) => MapEntry(k.toString(), v.toMap())),
+    _deviceId: deviceId,
+    _mapping: mapping.map((k, v) => MapEntry(k.toString(), v.toMap())),
   };
 }

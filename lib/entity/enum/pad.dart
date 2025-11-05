@@ -80,21 +80,6 @@ enum Pad {
   h7,
   h8;
 
-  static List<Pad> calibratingPads() {
-    final excluded = {
-      Pad.up,
-      Pad.down,
-      Pad.left,
-      Pad.right,
-      Pad.session,
-      Pad.user1,
-      Pad.user2,
-      Pad.mixer,
-    };
-
-    return Pad.values.where((pad) => !excluded.contains(pad)).toList();
-  }
-
   factory Pad.fromString(String str) =>
       Pad.values.firstWhere((el) => el.name.toLowerCase() == str);
 

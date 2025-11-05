@@ -8,7 +8,8 @@ import 'package:yx_scope_flutter/yx_scope_flutter.dart';
 import 'package:yx_state_flutter/yx_state_flutter.dart';
 
 class NewColorDialog extends StatelessWidget {
-  const NewColorDialog({super.key});
+  final bool isEdit;
+  const NewColorDialog({super.key, required this.isEdit});
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +19,7 @@ class NewColorDialog extends StatelessWidget {
         return StateBuilder<ColorDictionaryState>(
           stateReadable: manager,
           builder: (ctx, state, _) => AlertDialog(
-            title: Text('Add color to dictionary'),
+            title: Text('${isEdit ? 'Edit' : 'Add'} dictionary color'),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.start,
@@ -27,10 +28,12 @@ class NewColorDialog extends StatelessWidget {
                   'Choose desired velocity value and then pick a similar color.',
                 ),
                 CountSelector(
+                  disabled: isEdit,
                   value: state.velocity.toDouble(),
                   min: 0.0,
                   max: 127.0,
                   onChanged: manager.setVelocity,
+                  displayFunction: (value) => value.toStringAsFixed(0),
                 ),
                 ColorPicker(
                   pickerColor: state.color,
@@ -46,7 +49,7 @@ class NewColorDialog extends StatelessWidget {
                     context,
                   ).pop((state.velocity, state.color.toARGB32()));
                 },
-                child: const Text('Add'),
+                child: Text(isEdit ? 'Edit' : 'Add'),
               ),
               TextButton(
                 onPressed: () {

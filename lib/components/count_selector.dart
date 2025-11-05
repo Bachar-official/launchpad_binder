@@ -11,6 +11,7 @@ class CountSelector extends StatefulWidget {
     this.max = 999999,
     this.step = 1,
     this.width = 108,
+    this.disabled = false,
   });
 
   final double value;
@@ -18,6 +19,7 @@ class CountSelector extends StatefulWidget {
   final String Function(double value)? displayFunction;
   final double min;
   final double max;
+  final bool disabled;
 
   /// The step to increment or decrement by.
   final double step;
@@ -63,7 +65,7 @@ class _CountSelectorState extends State<CountSelector> {
         mainAxisSize: MainAxisSize.min,
         children: [
           IconButton(
-            onPressed: () {
+            onPressed: widget.disabled ? null : () {
               if (widget.value - stepSize >= widget.min) {
                 widget.onChanged?.call(widget.value - stepSize);
               }
@@ -109,7 +111,7 @@ class _CountSelectorState extends State<CountSelector> {
           ),
           const SizedBox(width: 8),
           IconButton(
-            onPressed: () {
+            onPressed: widget.disabled ? null : () {
               if (widget.value + stepSize <= widget.max) {
                 widget.onChanged?.call(widget.value + stepSize);
               }

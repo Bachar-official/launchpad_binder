@@ -1,23 +1,24 @@
 import 'dart:async';
 
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 
 class MidiService {
   final MidiCommand _midi = MidiCommand();
 
+  final _deviceNotifier = ValueNotifier<MidiDevice?>(null);
   Stream<MidiPacket>? _midiStream;
   StreamSubscription<MidiPacket>? _subscription;
 
-  MidiDevice? _activeDevice;
-  MidiDevice? get activeDevice => _activeDevice;
+  MidiDevice? get activeDevice => _deviceNotifier.value;
 
   Stream<MidiPacket>? get onMidiData => _midiStream;
 
   Future<List<MidiDevice>?> get devices async => await _midi.devices;
 
   void sendMidi({required int type, required int address, required int velocity}) {
-    _midi.sendData(Uint8List.fromList([type, address, velocity]), deviceId: _activeDevice?.id);
+    _midi.sendData(Uint8List.fromList([type, address, velocity]), deviceId: activeDevice?.id);
   }
 
   void clearMidi() {
@@ -27,28 +28,28 @@ class MidiService {
   }
 
   Future<void> connectToDevice(MidiDevice? device) async {
-    if (_activeDevice?.id == device?.id) return;
+    if (activeDevice?.id == device?.id) return;
 
     await disconnect();
 
     if (device == null) {
-      _activeDevice = null;
+      _deviceNotifier.value = null;
       _midiStream = null;
       return;
     }
 
     await _midi.connectToDevice(device);
-    _activeDevice = device;
+    _deviceNotifier.value = device;
     _midiStream = _midi.onMidiDataReceived;
   }
 
   Future<void> disconnect() async {
     _subscription?.cancel();
     _subscription = null;
-    if (_activeDevice != null) {
-      _midi.disconnectDevice(_activeDevice!);
+    if (activeDevice != null) {
+      _midi.disconnectDevice(activeDevice!);
     }
-    _activeDevice = null;
+    _deviceNotifier.value = null;
     _midiStream = null;
   }
 
