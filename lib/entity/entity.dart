@@ -1,6 +1,7 @@
 export './condition.dart';
 export './device_config.dart';
 export './manager_deps.dart';
+export './midi_pad.dart';
 
 export './enum/pad.dart';
 export './enum/snackbar_reason.dart';

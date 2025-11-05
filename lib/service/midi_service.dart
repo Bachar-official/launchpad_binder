@@ -16,13 +16,13 @@ class MidiService {
 
   Future<List<MidiDevice>?> get devices async => await _midi.devices;
 
-  void sendMidi(int address, int velocity) {
-    _midi.sendData(Uint8List.fromList([144, address, velocity]), deviceId: _activeDevice?.id);
+  void sendMidi({required int type, required int address, required int velocity}) {
+    _midi.sendData(Uint8List.fromList([type, address, velocity]), deviceId: _activeDevice?.id);
   }
 
   void clearMidi() {
     for (int i = 0; i < 200; i++) {
-      sendMidi(i, 0);
+      sendMidi(type: 144, address: i, velocity: 0);
     }
   }
 

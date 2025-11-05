@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
-import 'package:launchpad_binder/service/midi_service.dart';
 import 'package:launchpad_binder/service/service.dart';
 
 class WizardManager extends ManagerBase<WizardState>
@@ -59,11 +58,11 @@ class WizardManager extends ManagerBase<WizardState>
     if (device != null) setStep(1);
   });
 
-  // === КАЛИБРОВКА ===
+  // === CALIBRATION ===
 
   void startFullMapping() => handle((emit) async {
-    // Начинаем с первой кнопки
-    emit(state.copyWith(currentMappingPad: Pad.calibratingPads()[0]));
+    // Begin from first pad
+    emit(state.copyWith(currentMappingPad: Pad.values[0]));
     _listenForNextPad();
   });
 
@@ -71,32 +70,33 @@ class WizardManager extends ManagerBase<WizardState>
     _singlePressSubscription?.cancel();
     _singlePressSubscription = midiService.onMidiData?.listen((packet) {
       if (_isNoteOn(packet)) {
-        _onPadPressed(packet.data[1]);
+        _onPadPressed(packet.data[0], packet.data[1]);
       }
     });
   }
 
-  void _onPadPressed(int midiNote) {
+  void _onPadPressed(int type, int address) {
     final currentPad = state.currentMappingPad;
     if (currentPad == null) return;
 
-    // Сохраняем
-    final newMap = Map<Pad, int>.from(state.mapping);
-    newMap[currentPad] = midiNote;
+    // Save
+    final newMap = Map<Pad, MidiPad>.from(state.mapping);
+    newMap[currentPad] = MidiPad(address: address, type: type);
 
-    // Определяем следующую кнопку
-    final currentIndex = Pad.calibratingPads().indexOf(currentPad);
-    final isLast = currentIndex == Pad.calibratingPads().length - 1;
-    final nextPad = isLast ? null : Pad.calibratingPads()[currentIndex + 1];
+    // Define next button
+    final currentIndex = Pad.values.indexOf(currentPad);
+    final isLast = currentIndex == Pad.values.length - 1;
+    final nextPad = isLast ? null : Pad.values[currentIndex + 1];
 
     handle((emit) async {
       if (nextPad != null) {
-        midiService.sendMidi(midiNote, 127);
-        // Продолжаем
+        // Send maximum velocity signal
+        midiService.sendMidi(type: type, address: address, velocity: 127);
+        // Continue
         emit(state.copyWith(profileMap: newMap, currentMappingPad: nextPad));
-        success('Button "${currentPad.name}" → $midiNote');
+        success('Button "${currentPad.name}" → $address');
       } else {
-        // Завершаем
+        // End
         midiService.clearMidi();
         _singlePressSubscription?.cancel();
         _singlePressSubscription = null;

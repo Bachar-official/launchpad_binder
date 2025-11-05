@@ -1,10 +1,9 @@
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-import 'package:launchpad_binder/entity/device_config.dart';
-import 'package:launchpad_binder/entity/enum/pad.dart';
+import 'package:launchpad_binder/entity/entity.dart';
 
 class WizardState {
   final int step;
-  final Map<Pad, int> mapping;
+  final Map<Pad, MidiPad> mapping;
   final Pad? currentMappingPad;
   final List<MidiDevice> devices;
   final String? deviceId;
@@ -27,7 +26,7 @@ class WizardState {
 
   WizardState copyWith({
     int? step,
-    Map<Pad, int>? profileMap,
+    Map<Pad, MidiPad>? profileMap,
     Pad? currentMappingPad,
     bool nullableMappingPad = false,
     List<MidiDevice>? devices,
@@ -35,7 +34,7 @@ class WizardState {
     bool nullableDeviceId = false,
   }) => WizardState(
     step: step ?? this.step,
-    mapping: profileMap ?? this.mapping,
+    mapping: profileMap ?? mapping,
     currentMappingPad: nullableMappingPad
         ? null
         : currentMappingPad ?? this.currentMappingPad,
