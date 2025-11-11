@@ -1,13 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Key;
 import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
-import 'package:launchpad_binder/native/key_simulator.dart';
 import 'package:launchpad_binder/service/service.dart';
 import 'package:launchpad_binder/utils/midi_utils.dart';
 
@@ -32,21 +30,10 @@ class SettingsManager extends ManagerBase<SettingsState>
     emit(state.copyWith(isLoading: isLoading));
   });
 
-  void updateDevices() => handle((emit) async {
-    debug('Try to get MIDI devices');
-    _pressSubscription?.cancel();
-    _pressSubscription = null;
-    disconnectDevice();
+  void getConfig() => handle((emit) async {
+    debug('Try to get device config');
     setIsLoading(true);
     try {
-      final devices = await midiService.devices;
-      checkCondition(
-        devices == null || devices.isEmpty,
-        'MIDI devices not found',
-      );
-      midiDevices = devices!;
-      success('Got ${devices.length} devices!');
-
       final config = await configService.getConfig();
       if (config == null) {
         final result = await showDialog<bool>(
@@ -64,6 +51,30 @@ class SettingsManager extends ManagerBase<SettingsState>
           message: 'Device configuration loaded!',
         );
       }
+    } catch(e, s) {
+      catchException(
+        deps: deps,
+        exception: e,
+        stacktrace: s,
+        message: 'Error while getting device config',
+      );
+    } finally {setIsLoading(false);}
+  });
+
+  void updateDevices() => handle((emit) async {
+    debug('Try to get MIDI devices');
+    _pressSubscription?.cancel();
+    _pressSubscription = null;
+    disconnectDevice();
+    setIsLoading(true);
+    try {
+      final devices = await midiService.devices;
+      checkCondition(
+        devices == null || devices.isEmpty,
+        'MIDI devices not found',
+      );
+      midiDevices = devices!;
+      success('Got ${devices.length} devices!');
     } catch (e, s) {
       catchException(
         deps: deps,
@@ -78,6 +89,8 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
+    _pressSubscription?.cancel();
+    _pressSubscription = null;
     setIsLoading(true);
     try {
       await midiService.connectToDevice(device);
@@ -93,18 +106,12 @@ class SettingsManager extends ManagerBase<SettingsState>
       setIsLoading(false);
     }
     if (midiService.onMidiData != null) {
-      final sim = KeySimulator.init();
       _pressSubscription = midiService.onMidiData?.listen((event) async {
         final pad = MidiUtils.getPressedPad(
           event,
           configService.config?.mapping,
         );
-        if (pad == Pad.a1) {
-          sim.simulateKeyCombo(['ctrl', 'alt', 't']);
-        }
-        if (pad == Pad.a2) {
-          sim.simulateKeyCombo(['alt', 'F4']);
-        }
+        debug('Pressed pad is $pad');
       });
     }
   });

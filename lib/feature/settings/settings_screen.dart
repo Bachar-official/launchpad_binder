@@ -19,6 +19,7 @@ class SettingsScreen extends StatelessWidget {
 
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!manager.isInitializedWidget) {
+            manager.getConfig();
             manager.updateDevices();
             manager.isInitializedWidget = true;
           }
@@ -55,6 +56,7 @@ class SettingsScreen extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<MidiDevice>(
+                          initialValue: manager.active,
                           decoration: InputDecoration(
                             helperText: 'Select MIDI device',
                             suffix: IconButton(
