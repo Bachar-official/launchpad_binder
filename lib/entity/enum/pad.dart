@@ -80,6 +80,20 @@ enum Pad {
   h7,
   h8;
 
+  static List<Pad> profilePads = [a, b, c, d, e, f, g, h];
+  
+  int? get toProfileNumber => switch(this) {
+    a => 0,
+    b => 1,
+    c => 2,
+    d => 3,
+    e => 4,
+    f => 5,
+    g => 6,
+    h => 7,
+    _ => null,
+  };
+
   factory Pad.fromString(String str) =>
       Pad.values.firstWhere((el) => el.name.toLowerCase() == str);
 

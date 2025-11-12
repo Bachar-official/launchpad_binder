@@ -29,7 +29,7 @@ class SettingsScreen extends StatelessWidget {
           stateReadable: manager,
           builder: (context, state, _) => Scaffold(
             appBar: AppBar(
-              title: const Text('Settings'),
+              title: Text('Current profile: ${state.profile + 1}'),
               actions: [
                 IconButton(
                   onPressed: manager.updateDevices,

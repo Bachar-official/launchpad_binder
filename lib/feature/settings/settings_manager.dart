@@ -31,6 +31,8 @@ class SettingsManager extends ManagerBase<SettingsState>
     emit(state.copyWith(isLoading: isLoading));
   });
 
+  void setProfile(int? profile) => handle((emit) async => emit(state.copyWith(profile: profile)));
+
   void getConfig() => handle((emit) async {
     debug('Try to get device config');
     setIsLoading(true);
@@ -52,14 +54,16 @@ class SettingsManager extends ManagerBase<SettingsState>
           message: 'Device configuration loaded!',
         );
       }
-    } catch(e, s) {
+    } catch (e, s) {
       catchException(
         deps: deps,
         exception: e,
         stacktrace: s,
         message: 'Error while getting device config',
       );
-    } finally {setIsLoading(false);}
+    } finally {
+      setIsLoading(false);
+    }
   });
 
   void updateDevices() => handle((emit) async {
@@ -92,7 +96,7 @@ class SettingsManager extends ManagerBase<SettingsState>
     debug('Selecting device ${device?.name}');
     if (state.connectedDevice != null) {
       disconnectDevice();
-    }    
+    }
     setIsLoading(true);
     try {
       await midiService.connectToDevice(device);
@@ -108,13 +112,7 @@ class SettingsManager extends ManagerBase<SettingsState>
       setIsLoading(false);
     }
     if (midiService.onMidiData != null) {
-      _pressSubscription = midiService.onMidiData?.listen((event) async {
-        final pad = MidiUtils.getPressedPad(
-          event,
-          configService.config?.mapping,
-        );
-        debug('Pressed pad is $pad');
-      });
+      _pressSubscription = midiService.onMidiData?.listen(handleMidiPacket);
     }
   });
 
@@ -137,4 +135,12 @@ class SettingsManager extends ManagerBase<SettingsState>
       setIsLoading(false);
     }
   });
+
+  Future<void> handleMidiPacket(MidiPacket packet) async {
+    final pad = MidiUtils.getPressedPad(packet, configService.config?.mapping);
+    if (Pad.profilePads.contains(pad)) {
+      debug('Pressed profile pad $pad!');
+      setProfile(pad?.toProfileNumber);
+    }
+  }
 }
