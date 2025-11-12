@@ -124,6 +124,7 @@ class SettingsManager extends ManagerBase<SettingsState>
       _pressSubscription = null;
       await midiService.disconnect();
       emit(state.copyWith(connectedDevice: null, nullableDevice: true));
+      success('Disconnected!');
     } catch (e, s) {
       catchException(
         deps: deps,
