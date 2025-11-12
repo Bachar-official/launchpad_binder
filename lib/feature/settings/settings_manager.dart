@@ -13,6 +13,7 @@ class SettingsManager extends ManagerBase<SettingsState>
     with CEHandler, SnackbarMixin, LoggerMixin {
   final MidiService midiService;
   final ConfigService configService;
+  final KeyboardService keyService = KeyboardService();
 
   SettingsManager(
     super.state, {
@@ -63,9 +64,9 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
-    _pressSubscription?.cancel();
-    _pressSubscription = null;
-    disconnectDevice();
+    if (state.connectedDevice != null) {
+      disconnectDevice();
+    }
     setIsLoading(true);
     try {
       final devices = await midiService.devices;
@@ -89,8 +90,9 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
-    _pressSubscription?.cancel();
-    _pressSubscription = null;
+    if (state.connectedDevice != null) {
+      disconnectDevice();
+    }    
     setIsLoading(true);
     try {
       await midiService.connectToDevice(device);
@@ -120,9 +122,9 @@ class SettingsManager extends ManagerBase<SettingsState>
     debug('Disconnecting...');
     setIsLoading(true);
     try {
-      _pressSubscription?.cancel();
+      await _pressSubscription?.cancel();
       _pressSubscription = null;
-      midiService.disconnect();
+      await midiService.disconnect();
       emit(state.copyWith(connectedDevice: null, nullableDevice: true));
     } catch (e, s) {
       catchException(

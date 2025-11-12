@@ -5,6 +5,7 @@ export './midi_pad.dart';
 
 export './enum/pad.dart';
 export './enum/snackbar_reason.dart';
+export './enum/key_code.dart';
 
 export './interface/has_deps.dart';
 export './interface/manager_base.dart';
