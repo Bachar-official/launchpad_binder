@@ -24,4 +24,6 @@ enum KeyCode {
   space, enter, escape, tab, backspace, delete, insert;
 
   static List<KeyCode> funcKeys = [f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12];
+
+  factory KeyCode.fromString(String code) => KeyCode.values.firstWhere((el) => el.name == code);
 }
