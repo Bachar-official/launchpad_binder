@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart' hide Key;
-import 'package:flutter_midi_command/flutter_midi_command.dart';
+import 'package:rtmidi_dart/rtmidi_dart.dart';
 import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/settings/components/calibration_dialog.dart';
@@ -24,14 +24,15 @@ class SettingsManager extends ManagerBase<SettingsState>
 
   List<MidiDevice> midiDevices = [];
   bool isInitializedWidget = false;
-  MidiDevice? get active => midiService.activeDevice;
-  StreamSubscription<MidiPacket>? _pressSubscription;
+  MidiDevice? get connectedDevice => midiService.connectedDevice;
+  StreamSubscription? _midiSubscription;
 
   void setIsLoading(bool isLoading) => handle((emit) async {
     emit(state.copyWith(isLoading: isLoading));
   });
 
-  void setProfile(int? profile) => handle((emit) async => emit(state.copyWith(profile: profile)));
+  void setProfile(int? profile) =>
+      handle((emit) async => emit(state.copyWith(profile: profile)));
 
   void getConfig() => handle((emit) async {
     debug('Try to get device config');
@@ -73,12 +74,9 @@ class SettingsManager extends ManagerBase<SettingsState>
     }
     setIsLoading(true);
     try {
-      final devices = await midiService.devices;
-      checkCondition(
-        devices == null || devices.isEmpty,
-        'MIDI devices not found',
-      );
-      midiDevices = devices!;
+      final devices = await midiService.getDevices();
+      checkCondition(devices.isEmpty, 'MIDI devices not found');
+      midiDevices = devices;
       success('Got ${devices.length} devices!');
     } catch (e, s) {
       catchException(
@@ -99,7 +97,9 @@ class SettingsManager extends ManagerBase<SettingsState>
     }
     setIsLoading(true);
     try {
-      await midiService.connectToDevice(device);
+      if (device != null) {
+        midiService.connect(device);
+      }
       emit(state.copyWith(connectedDevice: device));
     } catch (e, s) {
       catchException(
@@ -111,8 +111,8 @@ class SettingsManager extends ManagerBase<SettingsState>
     } finally {
       setIsLoading(false);
     }
-    if (midiService.onMidiData != null) {
-      _pressSubscription = midiService.onMidiData?.listen(handleMidiPacket);
+    if (device != null) {
+      _midiSubscription = midiService.messages.listen(handleMidiPacket);
     }
   });
 
@@ -120,9 +120,9 @@ class SettingsManager extends ManagerBase<SettingsState>
     debug('Disconnecting...');
     setIsLoading(true);
     try {
-      await _pressSubscription?.cancel();
-      _pressSubscription = null;
-      await midiService.disconnect();
+      _midiSubscription?.cancel();
+      _midiSubscription = null;
+      midiService.disconnect();
       emit(state.copyWith(connectedDevice: null, nullableDevice: true));
       success('Disconnected!');
     } catch (e, s) {
@@ -137,7 +137,7 @@ class SettingsManager extends ManagerBase<SettingsState>
     }
   });
 
-  Future<void> handleMidiPacket(MidiPacket packet) async {
+  Future<void> handleMidiPacket(List<int> packet) async {
     final pad = MidiUtils.getPressedPad(packet, configService.config?.mapping);
     if (Pad.profilePads.contains(pad)) {
       debug('Pressed profile pad $pad!');

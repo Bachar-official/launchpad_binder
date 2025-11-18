@@ -1,0 +1,1 @@
+set(CMAKE_LINKER "ld" CACHE STRING "Linker" FORCE)

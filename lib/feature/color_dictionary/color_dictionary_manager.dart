@@ -120,11 +120,7 @@ class ColorDictionaryManager extends ManagerBase<ColorDictionaryState>
       checkCondition(configService.config == null, 'Device config not found');
       final midiPad = configService.config!.mapping[pad];
       checkCondition(midiPad == null, 'mapping not found');
-      midiService.sendMidi(
-        type: midiPad!.type,
-        address: midiPad.address,
-        velocity: velocity,
-      );
+      midiService.send([midiPad!.type, midiPad.address, velocity]);
     } catch (e, s) {
       catchException(
         deps: deps,

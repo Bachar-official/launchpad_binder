@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/app/routing.dart';
 import 'package:launchpad_binder/app/scope.dart';
 import 'package:launchpad_binder/components/launchpad_visualizer.dart';
 import 'package:launchpad_binder/entity/enum/pad.dart';
 import 'package:launchpad_binder/feature/settings/settings_state.dart';
+import 'package:rtmidi_dart/rtmidi_dart.dart';
 import 'package:yx_scope_flutter/yx_scope_flutter.dart';
 import 'package:yx_state_flutter/yx_state_flutter.dart';
 
@@ -49,14 +49,14 @@ class SettingsScreen extends StatelessWidget {
               ],
             ),
             body: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const .all(8),
               child: state.isLoading
                   ? const CircularProgressIndicator()
                   : Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         DropdownButtonFormField<MidiDevice>(
-                          initialValue: manager.active,
+                          initialValue: manager.connectedDevice,
                           decoration: InputDecoration(
                             helperText: 'Select MIDI device',
                             suffix: IconButton(

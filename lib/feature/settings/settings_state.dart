@@ -1,5 +1,5 @@
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/device_config.dart';
+import 'package:rtmidi_dart/rtmidi_dart.dart';
 
 class SettingsState {
   final bool isLoading;

@@ -1,9 +1,10 @@
 import 'dart:async';
 
-import 'package:flutter_midi_command/flutter_midi_command.dart';
 import 'package:launchpad_binder/entity/entity.dart';
 import 'package:launchpad_binder/feature/config_wizard/wizard_state.dart';
 import 'package:launchpad_binder/service/service.dart';
+import 'package:launchpad_binder/utils/midi_utils.dart';
+import 'package:rtmidi_dart/rtmidi_dart.dart';
 
 class WizardManager extends ManagerBase<WizardState>
     with CEHandler, SnackbarMixin, LoggerMixin {
@@ -20,7 +21,7 @@ class WizardManager extends ManagerBase<WizardState>
     updateDevices();
   }
 
-  StreamSubscription<MidiPacket>? _singlePressSubscription;
+  StreamSubscription<List<int>>? _singlePressSubscription;
 
   void setDeviceId(String? deviceId) => handle(
     (emit) async => emit(
@@ -34,13 +35,13 @@ class WizardManager extends ManagerBase<WizardState>
   void updateDevices() => handle((emit) async {
     debug('Try to get MIDI devices');
     try {
-      final devices = await midiService.devices;
+      final devices = await midiService.getDevices();
       checkCondition(
-        devices == null || devices.isEmpty,
+        devices.isEmpty,
         'MIDI devices not found',
       );
       emit(state.copyWith(devices: devices));
-      success('Got ${devices?.length} devices!');
+      success('Got ${devices.length} devices!');
     } catch (e, s) {
       catchException(
         deps: deps,
@@ -53,9 +54,11 @@ class WizardManager extends ManagerBase<WizardState>
 
   void selectDevice(MidiDevice? device) => handle((emit) async {
     debug('Selecting device ${device?.name}');
-    setDeviceId(device?.id);
-    await midiService.connectToDevice(device);
-    if (device != null) setStep(1);
+    setDeviceId(device?.name);
+    if (device != null) {
+      midiService.connect(device);
+      setStep(1);
+    }
   });
 
   // === CALIBRATION ===
@@ -68,9 +71,9 @@ class WizardManager extends ManagerBase<WizardState>
 
   void _listenForNextPad() {
     _singlePressSubscription?.cancel();
-    _singlePressSubscription = midiService.onMidiData?.listen((packet) {
-      if (_isNoteOn(packet)) {
-        _onPadPressed(packet.data[0], packet.data[1]);
+    _singlePressSubscription = midiService.messages.listen((packet) {
+      if (MidiUtils.isNoteOn(packet)) {
+        _onPadPressed(packet[0], packet[1]);
       }
     });
   }
@@ -91,7 +94,7 @@ class WizardManager extends ManagerBase<WizardState>
     handle((emit) async {
       if (nextPad != null) {
         // Send maximum velocity signal
-        midiService.sendMidi(type: type, address: address, velocity: 127);
+        midiService.send([type, address, 127]);
         // Continue
         emit(state.copyWith(profileMap: newMap, currentMappingPad: nextPad));
         success('Button "${currentPad.name}" → $address');
@@ -122,12 +125,6 @@ class WizardManager extends ManagerBase<WizardState>
         }
       }
     });
-  }
-
-  bool _isNoteOn(MidiPacket packet) {
-    if (packet.data.length < 3) return false;
-    final velocity = packet.data[2];
-    return velocity > 0;
   }
 
   void cancelMapping() {
