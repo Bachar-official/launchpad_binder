@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import 'package:rtmidi_dart/rtmidi_dart.dart';
 
 class MidiService {
-  final RtMidi _midi = RtMidi();
 
   final ValueNotifier<MidiDevice?> _deviceNotifier = ValueNotifier(null);
   StreamSubscription<List<int>>? _subscription;
@@ -15,7 +14,7 @@ class MidiService {
   ValueListenable<MidiDevice?> get deviceListenable => _deviceNotifier;
 
   /// Get list of devices
-  Future<List<MidiDevice>> getDevices() => _midi.devices;
+  Future<List<MidiDevice>> getDevices() => RtMidi.devices;
 
   /// Main unified stream for incoming MIDI messages
   final StreamController<List<int>> _messagesController =

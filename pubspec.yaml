@@ -39,9 +39,7 @@ dependencies:
   yx_scope_flutter: ^1.1.2
   yx_scope: ^1.1.2
   rtmidi_dart:
-    git:
-      url: https://github.com/Bachar-official/rtmidi_dart.git
-      ref: main
+    path: ../rtmidi_dart
 
 dev_dependencies:
   flutter_test:

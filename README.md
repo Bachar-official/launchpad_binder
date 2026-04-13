@@ -1,16 +1,14 @@
 # launchpad_binder
 
-A new Flutter project.
+Flutter application for using your Novation Launchpad controller as a macros keyboard.
 
-## Getting Started
+## Screenshots
 
-This project is a starting point for a Flutter application.
+## Build from sources
 
-A few resources to get you started if this is your first Flutter project:
+- Please ensure you have Flutter SDK installed.
+- Enter `flutter build`
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Current project status
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+This project not completed yet.
